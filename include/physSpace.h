@@ -20,9 +20,9 @@ public:
         physSpace build();  
     };
 
-    void AddPhysObj(physObj *obj);
-    void RemoveObj(physObj *obj);
+    void AddPhysObj(physObj *obj);		// Add an object to the physicsSpace
+    void RemoveObj(physObj *obj);		// Remove an existing object from the physicsSpace
 
-    void update(double delta);
+    void update(double delta);			// Process a singular step, dependent on the time since last step
 };
 };
