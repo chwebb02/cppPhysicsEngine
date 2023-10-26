@@ -42,4 +42,8 @@ vector vector::operator-(vector& other) {
     vector invOther = other.scaled(-1);
     return operator+(invOther);
 }
+
+double vector::dotProduct(vector& v1, vector& v2) {
+    return v1.x * v2.x + v1.y + v2.y;
+}
 };

@@ -20,5 +20,7 @@ public:
 
     vector operator+(vector& other);
     vector operator-(vector& other);
+
+    static double dotProduct(vector& v1, vector& v2);
 };
 };
