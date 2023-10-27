@@ -6,9 +6,9 @@ using namespace geometry;
 using namespace physics;
 
 int main() {
-    vector t1 = vector(0, 0);
+    vector t1 = vector(-2, 0);
     vector t2 = vector(-2, 2);
-    vector dir = vector(0, 1);
+    vector dir = vector(1, 0.05);
 
     circleCollider c1 = circleCollider(t1, 1);
     planeCollider c2 = planeCollider(t2, dir, 10);

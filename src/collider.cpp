@@ -88,24 +88,18 @@ geometry::vector planeCollider::nearestTo(collider& other) {
 
         // Get the vector that will serve as our hypoteneuse
         vector toCurrentPoint = otherPoints[i] - transform;
-        double angleBetween = std::abs(direction.getAngle() - toCurrentPoint.getAngle());
-
-
-        // Get the acute angle to form a triangle with assume right angle
-        while (angleBetween > M_PI / 2) {
-            angleBetween -= (M_PI / 2);
-        }
+        double angleBetween = std::abs(toCurrentPoint.getAngle() - direction.getAngle());
 
         // Calculate the distance to the point that can make this triangle
         double hyp = toCurrentPoint.getMagnitude();
-        double currentDist = hyp * std::cos(angleBetween);
+        double currentDist = hyp * std::sin(angleBetween);
 
         // If the distance is less than the current least, set the least to current
         if (currentDist < distance) {
             distance = currentDist;
-            out = direction.scaled(hyp * std::sin(angleBetween)) + transform;
+            out = direction.scaled(hyp * std::cos(angleBetween)) + transform;
         } else if (distance == currentDist) {       // This may need to be reworked with tolerances
-            out = vectorAverage(out, direction.scaled(hyp * std::sin(angleBetween)) + transform);
+            out = vectorAverage(out, direction.scaled(hyp * std::cos(angleBetween)) + transform);
         }
     }
 
