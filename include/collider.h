@@ -14,6 +14,8 @@ public:
 
     virtual geometry::vector nearestTo(collider& other) = 0;
     virtual std::vector<geometry::vector> getPoints() = 0;
+    virtual geometry::vector getNormalPoint(geometry::vector point);
+
     static bool isColliding(collider& c1, collider& c2);
 };
 
@@ -25,6 +27,7 @@ public:
 
     geometry::vector nearestTo(collider& other);
     std::vector<geometry::vector> getPoints();
+    geometry::vector getNormalPoint(geometry::vector point);
 };
 
 class planeCollider: public collider {
@@ -36,6 +39,7 @@ public:
 
     geometry::vector nearestTo(collider& other);
     std::vector<geometry::vector> getPoints();
+    geometry::vector getNormalPoint(geometry::vector point);
 };
 
 class generalCollider: public collider {
@@ -46,5 +50,6 @@ public:
     
     geometry::vector nearestTo(collider& other);
     std::vector<geometry::vector> getPoints();
+    geometry::vector getNormalPoint(geometry::vector point);
 };
 }

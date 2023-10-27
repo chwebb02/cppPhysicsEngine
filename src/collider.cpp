@@ -46,14 +46,26 @@ circleCollider::circleCollider(geometry::vector transform, double radius) {
 geometry::vector circleCollider::nearestTo(collider &other) {
     using geometry::vector;
 
-    vector toOther = other.getTransform() - transform;
-    return toOther.absoluteScaled(radius) + transform;
+    // Get the point on the other surface that we will collide
+    // Then get a direction vector to that point
+    vector otherNormalPt = other.getNormalPoint(transform);
+    vector toPoint = otherNormalPt - transform;
+
+    // Return the point on this surface closest to the other surface collision point
+    return transform + otherNormalPt.absoluteScaled(radius);
 }
 
 std::vector<geometry::vector> circleCollider::getPoints() {
     std::vector<geometry::vector> out;
     out.push_back(transform);
     return out;
+}
+
+geometry::vector circleCollider::getNormalPoint(geometry::vector point) {
+    using geometry::vector;
+
+    vector toPoint = point - transform;
+    return transform + toPoint.scaled(radius);
 }
 
 
@@ -78,28 +90,16 @@ geometry::vector planeCollider::nearestTo(collider& other) {
     int numOtherPoints = otherPoints.size();
     double distance = MAXFLOAT;
     for (int i = 0; i < numOtherPoints; i++) {
-        /*
-        This algorithm assumes that the nearest point on a line L to another
-        point P that does not lie on the line is the point where a line segment
-        that passes through P also intersects L perpendicularly.  Thus we can create
-        a triangle that satisfies this condition and solve different values to get
-        this specific point of intersection
-        */
+        // Intuition explained in getNormalTo()
+        vector candidatePoint = getNormalPoint(otherPoints[i]);
 
-        // Get the vector that will serve as our hypoteneuse
-        vector toCurrentPoint = otherPoints[i] - transform;
-        double angleBetween = std::abs(toCurrentPoint.getAngle() - direction.getAngle());
-
-        // Calculate the distance to the point that can make this triangle
-        double hyp = toCurrentPoint.getMagnitude();
-        double currentDist = hyp * std::sin(angleBetween);
+        // Get the distance between candidate point and the current point
+        double currentDist = (candidatePoint - otherPoints[i]).getMagnitude();
 
         // If the distance is less than the current least, set the least to current
         if (currentDist < distance) {
             distance = currentDist;
-            out = direction.scaled(hyp * std::cos(angleBetween)) + transform;
-        } else if (distance == currentDist) {       // This may need to be reworked with tolerances
-            out = vectorAverage(out, direction.scaled(hyp * std::cos(angleBetween)) + transform);
+            out = candidatePoint;
         }
     }
 
@@ -128,6 +128,28 @@ std::vector<geometry::vector> planeCollider::getPoints() {
     out.push_back(transform + direction.scaled(length / 2));
     out.push_back(transform - direction.scaled(length / 2));
     return out;
+}
+
+geometry::vector planeCollider::getNormalPoint(geometry::vector point) {
+    /*
+    This algorithm assumes that the nearest point on a line L to another
+    point P that does not lie on the line is the point where a line segment
+    that passes through P also intersects L perpendicularly.  Thus we can create
+    a triangle that satisfies this condition and solve different values to get
+    this specific point of intersection
+    */
+    
+    using geometry::vector;
+
+    // Begin building the triangle with the hypoteneuse
+    vector toPoint = point - transform;
+    double angle = std::abs(toPoint.getAngle() - direction.getAngle());
+
+    // Calculate the magnitude of the hypoteneuse
+    double hyp = toPoint.getMagnitude();
+
+    // Return the point in space that forms the vertex with a right angle
+    return transform + direction.scaled(hyp * std::cos(angle));
 }
 
 
@@ -179,8 +201,6 @@ geometry::vector generalCollider::nearestTo(collider &other) {
         if (shortest < distance) {
             distance = shortest;
             out = candidatePoint;
-        } else if (shortest == distance) {      // This may need to be reworked with tolerances
-            out = vectorAverage(out, candidatePoint);
         }
     }
 
@@ -190,6 +210,37 @@ geometry::vector generalCollider::nearestTo(collider &other) {
 std::vector<geometry::vector> generalCollider::getPoints() {
     std::vector<geometry::vector> out = std::vector<geometry::vector>(points);
     out.push_back(transform);
+    return out;
+}
+
+geometry::vector generalCollider::getNormalPoint(geometry::vector point) {
+    using geometry::vector;
+
+    // Get the vector pointing from transform to point and it's angle
+    vector toPoint = point - transform;
+    double angleToPoint = toPoint.getAngle();
+
+    // Find the two points that this vector intersects
+    int less, greater;
+    for (less = 0; less < points.size(); less++) {
+        greater = less + 1;
+        if (greater == points.size()) {
+            greater = 0;
+        }
+
+        if (points[less].getAngle() <= angleToPoint && angleToPoint <= points[greater].getAngle()) {
+            break;
+        }
+    }
+
+    // Create a planeCollider to get the normal if it is on the line
+    vector planeTransform = vectorAverage(points[less], points[greater]);
+    planeCollider *edge = new planeCollider(planeTransform, (points[less] - points[greater]), (points[less] - points[greater]).getMagnitude());
+
+    // Return the normal point on the edge
+    vector out = edge->getNormalPoint(point);
+    delete edge;
+
     return out;
 }
 };
