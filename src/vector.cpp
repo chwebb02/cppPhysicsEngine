@@ -23,6 +23,11 @@ vector vector::scaled(double scalar) {
     return vector(x * scalar, y * scalar);
 }
 
+vector vector::absoluteScaled(double scalar) {
+    vector out = normalized();
+    return out.scaled(scalar);
+}
+
 vector vector::rotatedTo(double radians) {
     double magnitude = getMagnitude();
 
@@ -34,11 +39,11 @@ vector vector::rotatedBy(double radians) {
     return rotatedTo(radians);
 }
 
-vector vector::operator+(vector& other) {
+vector vector::operator+(vector other) {
     return vector(x + other.x, y + other.y);
 }
 
-vector vector::operator-(vector& other) {
+vector vector::operator-(vector other) {
     vector invOther = other.scaled(-1);
     return operator+(invOther);
 }
