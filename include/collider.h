@@ -8,12 +8,13 @@ class collider {
 protected:
     geometry::vector transform;
 public:
-    collider(geometry::vector transform);
-    collider();
+    collider() ;
     geometry::vector getTransform();
 
-    virtual geometry::vector nearestTo(collider& other) = 0;
+    virtual geometry::vector nearestTo(collider& other);
     virtual std::vector<geometry::vector> getPoints() = 0;
+    virtual geometry::vector getNormalPoint(geometry::vector point) = 0;
+
     static bool isColliding(collider& c1, collider& c2);
 };
 
@@ -25,6 +26,7 @@ public:
 
     geometry::vector nearestTo(collider& other);
     std::vector<geometry::vector> getPoints();
+    geometry::vector getNormalPoint(geometry::vector point);
 };
 
 class planeCollider: public collider {
@@ -34,8 +36,8 @@ private:
 public:
     planeCollider(geometry::vector transform, geometry::vector direction, double length);
 
-    geometry::vector nearestTo(collider& other);
     std::vector<geometry::vector> getPoints();
+    geometry::vector getNormalPoint(geometry::vector point);
 };
 
 class generalCollider: public collider {
@@ -44,7 +46,7 @@ private:
 public:
     generalCollider(geometry::vector transform, std::vector<geometry::vector> pts);
     
-    geometry::vector nearestTo(collider& other);
     std::vector<geometry::vector> getPoints();
+    geometry::vector getNormalPoint(geometry::vector point);
 };
 }

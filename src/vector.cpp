@@ -48,6 +48,10 @@ vector vector::operator-(vector other) {
     return operator+(invOther);
 }
 
+bool vector::operator==(vector other) {
+    return x == other.x && y == other.y;
+}
+
 double vector::dotProduct(vector& v1, vector& v2) {
     return v1.x * v2.x + v1.y + v2.y;
 }
