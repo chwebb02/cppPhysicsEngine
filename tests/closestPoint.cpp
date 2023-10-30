@@ -8,7 +8,7 @@ using namespace physics;
 
 int main() {
     vector t1 = vector(0, 0);
-    vector t2 = vector(0 , 5);
+    vector t2 = vector(5 , 5);
 
     std::vector<vector> pts = {vector(1, 1), vector(-1, 1), vector(-1, -1), vector(1, -1)};
 

@@ -172,29 +172,31 @@ geometry::vector generalCollider::getNormalPoint(geometry::vector point) {
     vector out = transform;
     double distance = MAXFLOAT;
 
+    // Iterate over each point on the generalCollider
     for (int i = 0; i < points.size(); i++) {
+        // Get the next point, 0 if we are currently at last point
         int j = i + 1;
         if (j == points.size()) {
             j = 0;
         }
 
+        // Simplify names of points in question
         vector currentPoint = transform + points[i];
         vector nextPoint = transform + points[j];
 
+        // Get the distance from the current point to the target point
         double currentDist = (point - currentPoint).getMagnitude();
 
-        if (point.getAngle() == currentPoint.getAngle() && currentDist < distance) {
-            out = currentPoint;
-            distance = currentDist;
-        }
-
+        // Create a planeCollider to represent the edge between current and next
         vector planeTransform = vectorAverage(currentPoint, nextPoint);
         vector dir = nextPoint - currentPoint;
         planeCollider edge = planeCollider(planeTransform, dir, dir.getMagnitude());
 
+        // Get the candidatePoint using the planeCollider
         vector candidatePoint = edge.getNormalPoint(point);
         currentDist = (point - candidatePoint).getMagnitude();
 
+        // Update if candidatePoint is closer than last best approximation
         if (currentDist < distance) {
             out = candidatePoint;
             distance = currentDist;
