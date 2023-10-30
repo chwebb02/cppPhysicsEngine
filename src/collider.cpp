@@ -123,32 +123,27 @@ geometry::vector planeCollider::getNormalPoint(geometry::vector point) {
     
     using geometry::vector;
 
-    // Begin building the triangle with the hypoteneuse
+    // Build the triangle with hypoteneuse
     vector toPoint = point - transform;
-    double angle = std::abs(toPoint.getAngle() - direction.getAngle());
+    double theta = std::abs(direction.getAngle() - toPoint.getAngle());
 
-    // Calculate the magnitude of the hypoteneuse
-    double hyp = toPoint.getMagnitude();
+    // Get the candidate point using trig
+    double delta = toPoint.getMagnitude() * std::cos(theta);
+    vector candidatePoint = transform + direction.scaled(delta);
 
-    // Get the point on the line that the intersection occurs
-    vector out = transform + direction.scaled(hyp * std::cos(angle));
-
-    // Ensure that 'out' is on the plane, otherwise return the endpoint closest to 'out'
-    vector endpoint1 = transform + direction.scaled(length/2);
-    vector endpoint2 = transform - direction.scaled(length/2);
-
-    // Since 'out' is already on the line, we only need to check one axis
-    if (std::min(endpoint1.x, endpoint2.x) <= out.x && out.x <= std::max(endpoint1.x, endpoint2.x)) {
-        return out;
+    // Determine if candidatePoint is on the planeCollider
+    if ((candidatePoint - transform).getMagnitude() <= direction.scaled(length / 2).getMagnitude()) {
+        return candidatePoint;
     }
 
-    double distanceTo1 = (endpoint1 - out).getMagnitude();
-    double distanceTo2 = (endpoint2 - out).getMagnitude();
+    // Find which endpoint is closest to candidatePoint if it is not on the plane
+    vector endpoint1 = transform - direction.scaled(length / 2);
+    vector endpoint2 = transform + direction.scaled(length / 2);
 
-    if (distanceTo1 < distanceTo2) {
+    if ((candidatePoint - endpoint1).getMagnitude() < (candidatePoint - endpoint2).getMagnitude()) {
         return endpoint1;
     }
-    
+
     return endpoint2;
 }
 
