@@ -5,11 +5,9 @@
 #include <iostream>
 
 namespace physics {
-collider::collider(geometry::vector transform) : transform(0, 0) {
-    this->transform = transform;
+collider::collider() : transform(0, 0) {
+    
 }
-
-collider::collider() : transform(0, 0) {}
 
 bool collider::isColliding(collider& c1, collider &c2) {
     using geometry::vector;
@@ -33,6 +31,32 @@ bool collider::isColliding(collider& c1, collider &c2) {
 
 geometry::vector collider::getTransform() {
     return transform;
+}
+
+geometry::vector collider::nearestTo(collider& other) {
+    using geometry::vector;
+
+    vector out = transform;
+    std::vector<vector> otherPoints = other.getPoints();
+
+    // Find the nearest point on the line to each point on the otherCollider
+    int numOtherPoints = otherPoints.size();
+    double distance = MAXFLOAT;
+    for (int i = 0; i < numOtherPoints; i++) {
+        // Intuition explained in getNormalTo()
+        vector candidatePoint = getNormalPoint(otherPoints[i]);
+
+        // Get the distance between candidate point and the current point
+        double currentDist = (candidatePoint - otherPoints[i]).getMagnitude();
+
+        // If the distance is less than the current least, set the least to current
+        if (currentDist < distance) {
+            distance = currentDist;
+            out = candidatePoint;
+        }
+    }
+
+    return out;
 }
 
 
@@ -80,48 +104,6 @@ geometry::vector vectorAverage(const geometry::vector& v1, const geometry::vecto
     return geometry::vector((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
 }
 
-geometry::vector planeCollider::nearestTo(collider& other) {
-    using geometry::vector;
-
-    vector out = transform;
-    std::vector<vector> otherPoints = other.getPoints();
-
-    // Find the nearest point on the line to each point on the otherCollider
-    int numOtherPoints = otherPoints.size();
-    double distance = MAXFLOAT;
-    for (int i = 0; i < numOtherPoints; i++) {
-        // Intuition explained in getNormalTo()
-        vector candidatePoint = getNormalPoint(otherPoints[i]);
-
-        // Get the distance between candidate point and the current point
-        double currentDist = (candidatePoint - otherPoints[i]).getMagnitude();
-
-        // If the distance is less than the current least, set the least to current
-        if (currentDist < distance) {
-            distance = currentDist;
-            out = candidatePoint;
-        }
-    }
-
-    // Ensure that 'out' is on the plane, otherwise return the endpoint closest to 'out'
-    vector endpoint1 = transform + direction.scaled(length/2);
-    vector endpoint2 = transform - direction.scaled(length/2);
-
-    // Since 'out' is already on the line, we only need to check one axis
-    if (std::min(endpoint1.x, endpoint2.x) <= out.x && out.x <= std::max(endpoint1.x, endpoint2.x)) {
-        return out;
-    }
-
-    double distanceTo1 = (endpoint1 - out).getMagnitude();
-    double distanceTo2 = (endpoint2 - out).getMagnitude();
-
-    if (distanceTo1 < distanceTo2) {
-        return endpoint1;
-    }
-    
-    return endpoint2;
-}
-
 std::vector<geometry::vector> planeCollider::getPoints() {
     std::vector<geometry::vector> out;
     out.push_back(transform);
@@ -148,8 +130,26 @@ geometry::vector planeCollider::getNormalPoint(geometry::vector point) {
     // Calculate the magnitude of the hypoteneuse
     double hyp = toPoint.getMagnitude();
 
-    // Return the point in space that forms the vertex with a right angle
-    return transform + direction.scaled(hyp * std::cos(angle));
+    // Get the point on the line that the intersection occurs
+    vector out = transform + direction.scaled(hyp * std::cos(angle));
+
+    // Ensure that 'out' is on the plane, otherwise return the endpoint closest to 'out'
+    vector endpoint1 = transform + direction.scaled(length/2);
+    vector endpoint2 = transform - direction.scaled(length/2);
+
+    // Since 'out' is already on the line, we only need to check one axis
+    if (std::min(endpoint1.x, endpoint2.x) <= out.x && out.x <= std::max(endpoint1.x, endpoint2.x)) {
+        return out;
+    }
+
+    double distanceTo1 = (endpoint1 - out).getMagnitude();
+    double distanceTo2 = (endpoint2 - out).getMagnitude();
+
+    if (distanceTo1 < distanceTo2) {
+        return endpoint1;
+    }
+    
+    return endpoint2;
 }
 
 
@@ -162,84 +162,49 @@ generalCollider::generalCollider(geometry::vector transform, std::vector<geometr
     }
 }
 
-geometry::vector generalCollider::nearestTo(collider &other) {
-    using geometry::vector;
-
-    int numEdges = points.size();
-    vector out = transform;
-    double distance = MAXFLOAT;
-
-    std::vector<vector> otherPoints = other.getPoints();
-    int numOtherPoints = otherPoints.size();
-
-    for (int i = 0; i < numEdges; i++) {
-        // Get the next index
-        int next = i + 1;
-        if (next == numEdges) {
-            next = 0;
-        }
-
-        // We will create a planeCollider to test each edge
-        vector planeTransform = vectorAverage(points[i] + transform, points[next] + transform);
-        planeCollider *edge = new planeCollider(planeTransform, (points[i] - points[next]), (points[i] - points[next]).getMagnitude());
-
-        // Get the closest point on the edge
-        vector candidatePoint = edge->nearestTo(other);
-        delete edge;
-        
-        // Calculate distance from each point on other, keep shortest
-        double shortest = MAXFLOAT;
-        for (int j = 0; j < numOtherPoints; j++) {
-            double currentDist = (candidatePoint - otherPoints[j]).getMagnitude();
-
-            if (currentDist < shortest) {
-                shortest = currentDist;
-            }
-        }
-
-        // If the point on this edge is closer to the other collider than the last, update it as such
-        if (shortest < distance) {
-            distance = shortest;
-            out = candidatePoint;
-        }
-    }
-
-    return out;
-}
-
 std::vector<geometry::vector> generalCollider::getPoints() {
-    std::vector<geometry::vector> out = std::vector<geometry::vector>(points);
-    out.push_back(transform);
+    std::vector<geometry::vector> out;
+    for (int i = 0; i < points.size(); i++) {
+        out.push_back(points[i] + transform);
+    }
     return out;
 }
 
 geometry::vector generalCollider::getNormalPoint(geometry::vector point) {
     using geometry::vector;
 
-    // Get the vector pointing from transform to point and it's angle
-    vector toPoint = point - transform;
-    double angleToPoint = toPoint.getAngle();
+    // This will need optimization in the future
+    vector out = transform;
+    double distance = MAXFLOAT;
 
-    // Find the two points that this vector intersects
-    int less, greater;
-    for (less = 0; less < points.size(); less++) {
-        greater = less + 1;
-        if (greater == points.size()) {
-            greater = 0;
+    for (int i = 0; i < points.size(); i++) {
+        int j = i + 1;
+        if (j == points.size()) {
+            j = 0;
         }
 
-        if (points[less].getAngle() <= angleToPoint && angleToPoint <= points[greater].getAngle()) {
-            break;
+        vector currentPoint = transform + points[i];
+        vector nextPoint = transform + points[j];
+
+        double currentDist = (point - currentPoint).getMagnitude();
+
+        if (point.getAngle() == currentPoint.getAngle() && currentDist < distance) {
+            out = currentPoint;
+            distance = currentDist;
+        }
+
+        vector planeTransform = vectorAverage(currentPoint, nextPoint);
+        vector dir = nextPoint - currentPoint;
+        planeCollider edge = planeCollider(planeTransform, dir, dir.getMagnitude());
+
+        vector candidatePoint = edge.getNormalPoint(point);
+        currentDist = (point - candidatePoint).getMagnitude();
+
+        if (currentDist < distance) {
+            out = candidatePoint;
+            distance = currentDist;
         }
     }
-
-    // Create a planeCollider to get the normal if it is on the line
-    vector planeTransform = vectorAverage(points[less], points[greater]);
-    planeCollider *edge = new planeCollider(planeTransform, (points[less] - points[greater]), (points[less] - points[greater]).getMagnitude());
-
-    // Return the normal point on the edge
-    vector out = edge->getNormalPoint(point);
-    delete edge;
 
     return out;
 }
