@@ -1,9 +1,6 @@
 #include "../include/collider.h"
 #include <math.h>
 #include <vector>
-#include <iostream>
-using std::cout;
-using std::endl;
 
 namespace physics {
 // Constructors
@@ -145,5 +142,28 @@ geometry::vector collider::nearestPointToCollider(collider& other) {
     }
 
     return out;
+}
+
+
+// rotate
+void circleCollider::rotateBy(double radians) {
+    return;
+}
+
+void lineCollider::rotateBy(double radians) {
+    direction = direction.rotatedBy(radians);
+}
+
+void generalCollider::rotateBy(double radians) {
+    using geometry::vector;
+
+    for (vector& pt : points) {
+        pt = pt.rotatedBy(radians);
+    }
+}
+
+// translate
+void collider::translate(geometry::vector newPos) {
+    transform = newPos;
 }
 };

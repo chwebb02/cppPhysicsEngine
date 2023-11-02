@@ -15,6 +15,9 @@ public:
     virtual geometry::vector nearestPointToPoint(geometry::vector) = 0;
     geometry::vector nearestPointToCollider(collider& other);
 
+    void translate(geometry::vector newPos);
+    virtual void rotateBy(double radians) = 0;
+
     static bool isColliding(collider& c1, collider& c2);
 };
 
@@ -28,6 +31,8 @@ public:
 
     geometry::vector nearestPointToPoint(geometry::vector point);
     geometry::vector nearestPointToCollider(collider& other);
+
+    void rotateBy(double radians);
 };
 
 class lineCollider: public collider {
@@ -41,6 +46,8 @@ public:
     std::vector<geometry::vector> getPoints();
 
     geometry::vector nearestPointToPoint(geometry::vector point);
+
+    void rotateBy(double radians);
 };
 
 class generalCollider: public collider {
@@ -52,5 +59,7 @@ public:
     std::vector<geometry::vector> getPoints();
     
     geometry::vector nearestPointToPoint(geometry::vector point);
+
+    void rotateBy(double radians);
 };
 };
