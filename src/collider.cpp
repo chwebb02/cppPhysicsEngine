@@ -123,7 +123,7 @@ geometry::vector circleCollider::nearestPointToCollider(collider& other) {
     vector nearestToCircle = other.nearestPointToPoint(transform);
     vector toOtherNearest = (nearestToCircle - transform).normalized();
 
-    return toOtherNearest.scaled(radius);
+    return transform + toOtherNearest.scaled(radius);
 }
 
 geometry::vector collider::nearestPointToCollider(collider& other) {
