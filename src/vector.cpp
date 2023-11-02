@@ -16,6 +16,10 @@ double vector::getAngle() {
 }
 
 vector vector::normalized() {
+    if (getMagnitude() == 0) {
+        return *this;
+    }
+
     return scaled(1 / getMagnitude());
 }
 

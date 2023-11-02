@@ -7,9 +7,9 @@ using namespace geometry;
 using namespace physics;
 
 int main() {
-    vector t1 = vector(-2, -1);
+    vector t1 = vector(0, -1);
     vector t2 = vector(0, 0);
-    vector t3 = vector(2, 1);
+    vector t3 = vector(0, 1);
 
     std::vector<vector> pts = {vector(-1, -1), vector(-1, 1), vector(1, 1), vector(1, -1)};
 
