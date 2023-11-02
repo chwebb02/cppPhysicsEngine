@@ -55,4 +55,8 @@ bool vector::operator==(vector other) {
 double vector::dotProduct(vector& v1, vector& v2) {
     return v1.x * v2.x + v1.y + v2.y;
 }
+
+vector vector::operator*(double scalar) {
+    return scaled(scalar);
+}
 };
