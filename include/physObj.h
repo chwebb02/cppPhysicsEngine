@@ -14,7 +14,7 @@ public:
 class dynamicObj : public physObj {
 private:
     geometry::vector velocity;
-    geometry::vector acceleration;
+    geometry::vector force;
     double mass;
 
     // Other properties
@@ -29,5 +29,7 @@ public:
 
     void setVelocity(geometry::vector newVelocity);
     void setAcceleration(geometry::vector newAccel);
+
+    void step(double delta);
 };
 };

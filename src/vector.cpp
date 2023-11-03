@@ -63,4 +63,18 @@ double vector::dotProduct(vector& v1, vector& v2) {
 vector vector::operator*(double scalar) {
     return scaled(scalar);
 }
+
+vector vector::operator/(double scalar) {
+    return scaled(1 / scalar);
+}
+
+void vector::operator+=(vector other) {
+    x += other.x;
+    y += other.y;
+}
+
+void vector::operator-=(vector other) {
+    x -= other.x;
+    y -= other.y;
+}
 };
