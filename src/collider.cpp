@@ -31,6 +31,11 @@ geometry::vector circleCollider::nearestPointToPoint(geometry::vector point) {
     using geometry::vector;
     
     vector toPoint = point - transform;
+
+    if (toPoint.getMagnitude() < radius) {
+        return point;
+    }
+
     return transform + toPoint.absoluteScaled(radius);
 }
 
@@ -87,8 +92,16 @@ geometry::vector generalCollider::nearestPointToPoint(geometry::vector point) {
         double candidateDistance = (candidatePoint - point).getMagnitude();
 
         if (candidateDistance < leastDistance) {
-            leastDistance = candidateDistance;
-            out = candidatePoint;
+            double pointToTransform = (point - transform).getMagnitude();
+            double candidateToTransform = (candidatePoint - transform).getMagnitude();
+
+            if (pointToTransform < candidateToTransform) {
+                leastDistance = pointToTransform;
+                out = point;
+            } else {
+                leastDistance = candidateDistance;
+                out = candidatePoint;
+            }
         }
     }
 
@@ -165,5 +178,20 @@ void generalCollider::rotateBy(double radians) {
 // translate
 void collider::translate(geometry::vector newPos) {
     transform = newPos;
+}
+
+
+// isColliding
+bool collider::isColliding(collider& c1, collider& c2) {
+    using geometry::vector;
+
+    vector nearest1 = c1.nearestPointToCollider(c2);
+    vector nearest2 = c2.nearestPointToCollider(c1);
+
+    if (nearest1.getMagnitude() + nearest2.getMagnitude() >= (c1.transform - c2.transform).getMagnitude()) {
+        return true;
+    }
+
+    return false;
 }
 };
