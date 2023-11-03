@@ -68,6 +68,31 @@ geometry::vector vectorAverage(const geometry::vector& v1, const geometry::vecto
     return geometry::vector((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
 }
 
+int generalCollider::countEdgeCrosses(geometry::vector point) {
+    using geometry::vector;
+
+    int out = 0;
+
+    for (int i = 0, j = 1; i < points.size(); i++, j++) {
+        if (j == points.size()) {
+            j = 0;
+        }
+
+        vector currentPoint = transform + points[i];
+        vector nextPoint = transform + points[j];
+
+        if (std::min(currentPoint.x, nextPoint.x) > point.x) {
+            continue;
+        }
+
+        if (std::min(currentPoint.y, nextPoint.y) <= point.y && point.y <= std::max(currentPoint.y, nextPoint.y)) {
+            out++;
+        }
+    }
+
+    return out;
+}
+
 geometry::vector generalCollider::nearestPointToPoint(geometry::vector point) {
     using geometry::vector;
 
@@ -92,13 +117,17 @@ geometry::vector generalCollider::nearestPointToPoint(geometry::vector point) {
         double candidateDistance = (candidatePoint - point).getMagnitude();
 
         if (candidateDistance < leastDistance) {
-            double pointToTransform = (point - transform).getMagnitude();
-            double candidateToTransform = (candidatePoint - transform).getMagnitude();
 
-            if (pointToTransform < candidateToTransform) {
-                leastDistance = pointToTransform;
+            // Calculate the number of times a line crosses over an edge to reach point
+            // Odd number of crosses ==> point inside polygon
+            // Even ==> point outside of polygon
+            int numEdgeCrosses = countEdgeCrosses(point);
+
+            if (numEdgeCrosses % 2 == 1) {
+                leastDistance = -1 * candidateDistance;
                 out = point;
-            } else {
+            } else if (candidateDistance < leastDistance) {
+                // Outside the polygon, return the closest point on the surface
                 leastDistance = candidateDistance;
                 out = candidatePoint;
             }

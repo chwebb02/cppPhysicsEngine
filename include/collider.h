@@ -53,6 +53,8 @@ public:
 class generalCollider: public collider {
 private:
     std::vector<geometry::vector> points;   // The points that define the shape (connected 0->1, 1->2, ..., (n-2)->(n-1), (n-1)->0)
+
+    int countEdgeCrosses(geometry::vector point);
 public:
     generalCollider(geometry::vector transform, std::vector<geometry::vector> pts);
 
