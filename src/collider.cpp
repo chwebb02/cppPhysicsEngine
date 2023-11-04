@@ -214,12 +214,12 @@ void collider::translate(geometry::vector newPos) {
 bool collider::isColliding(collider& c1, collider& c2) {
     using geometry::vector;
 
-    vector nearest1 = c1.nearestPointToCollider(c2);
-    vector nearest2 = c2.nearestPointToCollider(c1);
+    vector toOtherNearest = c1.transform - c2.nearestPointToCollider(c1);
+    vector toNearest = c1.transform - c1.nearestPointToCollider(c2);
 
-    if (nearest1.getMagnitude() + nearest2.getMagnitude() >= (c1.transform - c2.transform).getMagnitude()) {
+    if (toOtherNearest.getMagnitude() <= toNearest.getMagnitude()) {
         return true;
-    }
+    } 
 
     return false;
 }

@@ -4,6 +4,7 @@
 #include <vector>
 
 namespace physics {
+const double COLLISION_TOLERANCE = 1e-15;
 class collider {
 protected:
     geometry::vector transform = geometry::vector(0, 0);
