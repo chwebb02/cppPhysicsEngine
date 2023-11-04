@@ -16,6 +16,10 @@ double vector::getAngle() {
 }
 
 vector vector::normalized() {
+    if (getMagnitude() == 0) {
+        return *this;
+    }
+
     return scaled(1 / getMagnitude());
 }
 
@@ -54,5 +58,23 @@ bool vector::operator==(vector other) {
 
 double vector::dotProduct(vector& v1, vector& v2) {
     return v1.x * v2.x + v1.y + v2.y;
+}
+
+vector vector::operator*(double scalar) {
+    return scaled(scalar);
+}
+
+vector vector::operator/(double scalar) {
+    return scaled(1 / scalar);
+}
+
+void vector::operator+=(vector other) {
+    x += other.x;
+    y += other.y;
+}
+
+void vector::operator-=(vector other) {
+    x -= other.x;
+    y -= other.y;
 }
 };

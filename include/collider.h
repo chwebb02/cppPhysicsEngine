@@ -4,16 +4,20 @@
 #include <vector>
 
 namespace physics {
+const double COLLISION_TOLERANCE = 1e-15;
 class collider {
 protected:
-    geometry::vector transform;
+    geometry::vector transform = geometry::vector(0, 0);
 public:
-    collider() ;
     geometry::vector getTransform();
 
-    virtual geometry::vector nearestTo(collider& other);
     virtual std::vector<geometry::vector> getPoints() = 0;
-    virtual geometry::vector getNormalPoint(geometry::vector point) = 0;
+
+    virtual geometry::vector nearestPointToPoint(geometry::vector) = 0;
+    geometry::vector nearestPointToCollider(collider& other);
+
+    void translate(geometry::vector newPos);
+    virtual void rotateBy(double radians) = 0;
 
     static bool isColliding(collider& c1, collider& c2);
 };
@@ -24,29 +28,41 @@ private:
 public:
     circleCollider(geometry::vector transform, double radius);
 
-    geometry::vector nearestTo(collider& other);
     std::vector<geometry::vector> getPoints();
-    geometry::vector getNormalPoint(geometry::vector point);
+
+    geometry::vector nearestPointToPoint(geometry::vector point);
+    geometry::vector nearestPointToCollider(collider& other);
+
+    void rotateBy(double radians);
 };
 
-class planeCollider: public collider {
+class lineCollider: public collider {
 private:
-    geometry::vector direction;             // The unit direction the plane is aligned to
-    double length;                          // The length of the plane (half on either end of transform)
+    geometry::vector direction;
+    double length;
+
 public:
-    planeCollider(geometry::vector transform, geometry::vector direction, double length);
+    lineCollider(geometry::vector transform, geometry::vector direction, double length);
 
     std::vector<geometry::vector> getPoints();
-    geometry::vector getNormalPoint(geometry::vector point);
+
+    geometry::vector nearestPointToPoint(geometry::vector point);
+
+    void rotateBy(double radians);
 };
 
 class generalCollider: public collider {
 private:
     std::vector<geometry::vector> points;   // The points that define the shape (connected 0->1, 1->2, ..., (n-2)->(n-1), (n-1)->0)
+
+    int countEdgeCrosses(geometry::vector point);
 public:
     generalCollider(geometry::vector transform, std::vector<geometry::vector> pts);
-    
+
     std::vector<geometry::vector> getPoints();
-    geometry::vector getNormalPoint(geometry::vector point);
+    
+    geometry::vector nearestPointToPoint(geometry::vector point);
+
+    void rotateBy(double radians);
 };
-}
+};

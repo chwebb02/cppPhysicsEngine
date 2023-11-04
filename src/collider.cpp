@@ -1,208 +1,226 @@
 #include "../include/collider.h"
-#include "../include/geometry.h"
 #include <math.h>
 #include <vector>
-#include <iostream>
 
 namespace physics {
-collider::collider() : transform(0, 0) {
-    
+// Constructors
+circleCollider::circleCollider(geometry::vector tform, double rad) {
+    transform = tform;
+    radius = rad;
 }
 
-bool collider::isColliding(collider& c1, collider &c2) {
-    using geometry::vector;
-
-    // Get the distance between the centers of both colliders
-    double distBetween = (c1.transform - c2.transform).getMagnitude();
-
-    // Get the distance to the nearest point to the other collider
-    double d1 = c1.nearestTo(c2).getMagnitude();
-    double d2 = c2.nearestTo(c1).getMagnitude();
-
-    // If the distance between the points is greater than the distance
-    // to the nearest points, then we do not have a collision
-    if (distBetween > d1 + d2) {
-        return false;
-    }
-
-    // Otherwise, the two colliders overlap and we return true
-    return true;
+lineCollider::lineCollider(geometry::vector tform, geometry::vector dir, double len) : direction(dir.normalized()) {
+    transform = tform;
+    length = len;
 }
 
+generalCollider::generalCollider(geometry::vector tform, std::vector<geometry::vector> pts) {
+    transform = tform;
+    points = std::vector<geometry::vector>(pts);
+}
+
+
+// getTransform
 geometry::vector collider::getTransform() {
     return transform;
 }
 
-geometry::vector collider::nearestTo(collider& other) {
+
+// nearestPointTo
+geometry::vector circleCollider::nearestPointToPoint(geometry::vector point) {
     using geometry::vector;
-
-    vector out = transform;
-    std::vector<vector> otherPoints = other.getPoints();
-
-    // Find the nearest point on the line to each point on the otherCollider
-    int numOtherPoints = otherPoints.size();
-    double distance = MAXFLOAT;
-    for (int i = 0; i < numOtherPoints; i++) {
-        // Intuition explained in getNormalTo()
-        vector candidatePoint = getNormalPoint(otherPoints[i]);
-
-        // Get the distance between candidate point and the current point
-        double currentDist = (candidatePoint - otherPoints[i]).getMagnitude();
-
-        // If the distance is less than the current least, set the least to current
-        if (currentDist < distance) {
-            distance = currentDist;
-            out = candidatePoint;
-        }
-    }
-
-    return out;
-}
-
-
-// Begin Circle
-circleCollider::circleCollider(geometry::vector transform, double radius) {
-    this->transform = transform;
-    this->radius = radius;
-}
-
-
-geometry::vector circleCollider::nearestTo(collider &other) {
-    using geometry::vector;
-
-    // Get the point on the other surface that we will collide
-    // Then get a direction vector to that point
-    vector otherNormalPt = other.getNormalPoint(transform);
-    vector toPoint = otherNormalPt - transform;
-
-    // Return the point on this surface closest to the other surface collision point
-    return transform + otherNormalPt.absoluteScaled(radius);
-}
-
-std::vector<geometry::vector> circleCollider::getPoints() {
-    std::vector<geometry::vector> out;
-    out.push_back(transform);
-    return out;
-}
-
-geometry::vector circleCollider::getNormalPoint(geometry::vector point) {
-    using geometry::vector;
-
-    vector toPoint = point - transform;
-    return transform + toPoint.scaled(radius);
-}
-
-
-// Begin Plane
-planeCollider::planeCollider(geometry::vector transform, geometry::vector direction, double length) : direction(0, 0) {
-    this->transform = transform;
-    this->direction = direction.normalized();
-    this->length = length;
-}
-
-geometry::vector vectorAverage(const geometry::vector& v1, const geometry::vector& v2) {
-    return geometry::vector((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
-}
-
-std::vector<geometry::vector> planeCollider::getPoints() {
-    std::vector<geometry::vector> out;
-    out.push_back(transform);
-    out.push_back(transform + direction.scaled(length / 2));
-    out.push_back(transform - direction.scaled(length / 2));
-    return out;
-}
-
-geometry::vector planeCollider::getNormalPoint(geometry::vector point) {
-    /*
-    This algorithm assumes that the nearest point on a line L to another
-    point P that does not lie on the line is the point where a line segment
-    that passes through P also intersects L perpendicularly.  Thus we can create
-    a triangle that satisfies this condition and solve different values to get
-    this specific point of intersection
-    */
     
-    using geometry::vector;
-
-    // Build the triangle with hypoteneuse
     vector toPoint = point - transform;
-    double theta = std::abs(direction.getAngle() - toPoint.getAngle());
 
-    // Get the candidate point using trig
-    double delta = toPoint.getMagnitude() * std::cos(theta);
-    vector candidatePoint = transform + direction.scaled(delta);
-
-    // Determine if candidatePoint is on the planeCollider
-    if ((candidatePoint - transform).getMagnitude() <= direction.scaled(length / 2).getMagnitude()) {
-        return candidatePoint;
+    if (toPoint.getMagnitude() < radius) {
+        return point;
     }
 
-    // Find which endpoint is closest to candidatePoint if it is not on the plane
-    vector endpoint1 = transform - direction.scaled(length / 2);
-    vector endpoint2 = transform + direction.scaled(length / 2);
+    return transform + toPoint.absoluteScaled(radius);
+}
 
-    if ((candidatePoint - endpoint1).getMagnitude() < (candidatePoint - endpoint2).getMagnitude()) {
+geometry::vector lineCollider::nearestPointToPoint(geometry::vector point) {
+    using geometry::vector;
+
+    vector hypoteneuse = point - transform;
+    double hypoteneuseLength = hypoteneuse.getMagnitude();
+    double theta = std::abs(direction.getAngle() - hypoteneuse.getAngle());
+
+    double delta = hypoteneuseLength * std::cos(theta);
+    vector rawPoint = transform + direction.scaled(delta);
+
+    if ((rawPoint - transform).getMagnitude() <= length / 2) {
+        return rawPoint;
+    }
+
+    vector scaledDirection = direction.scaled(length / 2);
+    vector endpoint1 = transform + scaledDirection;
+    vector endpoint2 = transform - scaledDirection;
+
+    if ((rawPoint - endpoint1).getMagnitude() < (rawPoint - endpoint2).getMagnitude()) {
         return endpoint1;
     }
 
     return endpoint2;
 }
 
-
-// Begin generalCollider
-generalCollider::generalCollider(geometry::vector transform, std::vector<geometry::vector> pts) {
-    this->transform = transform;
-    int numPts = pts.size();
-    for (int i = 0; i < numPts; i++) {
-        points.push_back(pts[i]);
-    }
+geometry::vector vectorAverage(const geometry::vector& v1, const geometry::vector& v2) {
+    return geometry::vector((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
 }
 
-std::vector<geometry::vector> generalCollider::getPoints() {
-    std::vector<geometry::vector> out;
-    for (int i = 0; i < points.size(); i++) {
-        out.push_back(points[i] + transform);
-    }
-    return out;
-}
-
-geometry::vector generalCollider::getNormalPoint(geometry::vector point) {
+int generalCollider::countEdgeCrosses(geometry::vector point) {
     using geometry::vector;
 
-    // This will need optimization in the future
-    vector out = transform;
-    double distance = MAXFLOAT;
+    int out = 0;
 
-    // Iterate over each point on the generalCollider
-    for (int i = 0; i < points.size(); i++) {
-        // Get the next point, 0 if we are currently at last point
-        int j = i + 1;
+    for (int i = 0, j = 1; i < points.size(); i++, j++) {
         if (j == points.size()) {
             j = 0;
         }
 
-        // Simplify names of points in question
         vector currentPoint = transform + points[i];
         vector nextPoint = transform + points[j];
 
-        // Get the distance from the current point to the target point
-        double currentDist = (point - currentPoint).getMagnitude();
+        if (std::min(currentPoint.x, nextPoint.x) > point.x) {
+            continue;
+        }
 
-        // Create a planeCollider to represent the edge between current and next
-        vector planeTransform = vectorAverage(currentPoint, nextPoint);
-        vector dir = nextPoint - currentPoint;
-        planeCollider edge = planeCollider(planeTransform, dir, dir.getMagnitude());
-
-        // Get the candidatePoint using the planeCollider
-        vector candidatePoint = edge.getNormalPoint(point);
-        currentDist = (point - candidatePoint).getMagnitude();
-
-        // Update if candidatePoint is closer than last best approximation
-        if (currentDist < distance) {
-            out = candidatePoint;
-            distance = currentDist;
+        if (std::min(currentPoint.y, nextPoint.y) <= point.y && point.y <= std::max(currentPoint.y, nextPoint.y)) {
+            out++;
         }
     }
 
     return out;
+}
+
+geometry::vector generalCollider::nearestPointToPoint(geometry::vector point) {
+    using geometry::vector;
+
+    double leastDistance = MAXFLOAT;
+    vector out = transform;
+
+    for (int i = 0, j = 1; i < points.size(); i++, j++) {
+        if (j == points.size()) {
+            j = 0;
+        }
+
+        vector currentPoint = transform + points[i];
+        vector nextPoint = transform + points[j];
+
+        vector lineTransform = vectorAverage(currentPoint, nextPoint);
+        vector lineDirection = nextPoint - currentPoint;
+        double lineMagnitude = lineDirection.getMagnitude();
+
+        lineCollider line = lineCollider(lineTransform, lineDirection, lineMagnitude);
+
+        vector candidatePoint = line.nearestPointToPoint(point);
+        double candidateDistance = (candidatePoint - point).getMagnitude();
+
+        if (candidateDistance < leastDistance) {
+
+            // Calculate the number of times a line crosses over an edge to reach point
+            // Odd number of crosses ==> point inside polygon
+            // Even ==> point outside of polygon
+            int numEdgeCrosses = countEdgeCrosses(point);
+
+            if (numEdgeCrosses % 2 == 1) {
+                leastDistance = -1 * candidateDistance;
+                out = point;
+            } else if (candidateDistance < leastDistance) {
+                // Outside the polygon, return the closest point on the surface
+                leastDistance = candidateDistance;
+                out = candidatePoint;
+            }
+        }
+    }
+
+    return out;
+}
+
+
+// getPoints()
+std::vector<geometry::vector> circleCollider::getPoints() {
+    std::vector<geometry::vector> out = {transform};
+    return out;
+}
+
+std::vector<geometry::vector> lineCollider::getPoints() {
+    std::vector<geometry::vector> out = {transform - direction.scaled(length / 2), transform, transform + direction.scaled(length / 2)};
+    return out;
+}
+
+std::vector<geometry::vector> generalCollider::getPoints() {
+    std::vector<geometry::vector> out = std::vector<geometry::vector>(points);
+    return out;
+}
+
+
+// nearestToCollider
+geometry::vector circleCollider::nearestPointToCollider(collider& other) {
+    using geometry::vector;
+    
+    vector nearestToCircle = other.nearestPointToPoint(transform);
+    vector toOtherNearest = (nearestToCircle - transform).normalized();
+
+    return transform + toOtherNearest.scaled(radius);
+}
+
+geometry::vector collider::nearestPointToCollider(collider& other) {
+    using geometry::vector;
+
+    double leastDistance = MAXFLOAT;
+    vector out = transform;
+
+    std::vector<vector> otherPoints = other.getPoints();
+    for (vector point : otherPoints) {
+        vector nearestOnLine = nearestPointToPoint(point);                              // Get the nearest point on the collider to the endpoint of the other collider
+        vector nearestOnOther = other.nearestPointToPoint(nearestOnLine);               // Get the nearest point on the other collider to the nearest point on this collider
+        double candidateDistance = (nearestOnLine - nearestOnOther).getMagnitude();     // Find the difference in these points
+
+        if (candidateDistance < leastDistance) {
+            leastDistance = candidateDistance;
+            out = nearestPointToPoint(nearestOnOther);
+        }
+    }
+
+    return out;
+}
+
+
+// rotate
+void circleCollider::rotateBy(double radians) {
+    return;
+}
+
+void lineCollider::rotateBy(double radians) {
+    direction = direction.rotatedBy(radians);
+}
+
+void generalCollider::rotateBy(double radians) {
+    using geometry::vector;
+
+    for (vector& pt : points) {
+        pt = pt.rotatedBy(radians);
+    }
+}
+
+// translate
+void collider::translate(geometry::vector newPos) {
+    transform = newPos;
+}
+
+
+// isColliding
+bool collider::isColliding(collider& c1, collider& c2) {
+    using geometry::vector;
+
+    vector toOtherNearest = c1.transform - c2.nearestPointToCollider(c1);
+    vector toNearest = c1.transform - c1.nearestPointToCollider(c2);
+
+    if (toOtherNearest.getMagnitude() <= toNearest.getMagnitude()) {
+        return true;
+    } 
+
+    return false;
 }
 };

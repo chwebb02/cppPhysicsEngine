@@ -22,6 +22,10 @@ public:
     vector operator+(vector other);
     vector operator-(vector other);
     bool operator==(vector other);
+    vector operator*(double scalar);
+    void operator+=(vector other);
+    void operator-=(vector other);
+    vector operator/(double scalar);
 
     static double dotProduct(vector& v1, vector& v2);
 };
