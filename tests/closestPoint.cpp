@@ -1,5 +1,5 @@
-#include "../include/collider.h"
-#include "../include/geometry.h"
+#include "collider.h"
+#include "geometry.h"
 #include <iostream>
 #include <vector>
 

@@ -5,20 +5,28 @@
 
 namespace physics {
 const double COLLISION_TOLERANCE = 1e-15;
+
+// Pure virtual class for all collider types
 class collider {
 protected:
     geometry::vector transform = geometry::vector(0, 0);
 public:
     geometry::vector getTransform();
 
+    // Get the points that define a collider
     virtual std::vector<geometry::vector> getPoints() = 0;
 
+    // Get the nearest point on a colliders surface to a point
     virtual geometry::vector nearestPointToPoint(geometry::vector) = 0;
-    geometry::vector nearestPointToCollider(collider& other);
 
+    // Get the nearest point on a colliders surface to another collider
+    virtual geometry::vector nearestPointToCollider(collider& other);
+
+    // Move or rotate the collider
     void translate(geometry::vector newPos);
     virtual void rotateBy(double radians) = 0;
 
+    // Are two colliders colliding with one another
     static bool isColliding(collider& c1, collider& c2);
 };
 

@@ -4,6 +4,8 @@
 #include "collider.h"
 
 namespace physics {
+// There may be a need for tolerances
+
 class physObj {
 protected:
     geometry::vector position;
@@ -21,15 +23,8 @@ private:
     double elasticity;          // 0 - 1: 0 = complete absorption, 1 = complete energy conservation
 
 public:
-    void handleCollision(physObj& other);
-    void handleCollision(dynamicObj& other);
-
-    geometry::vector getVelocity();
-    geometry::vector getAcceleration();
-
-    void setVelocity(geometry::vector newVelocity);
-    void setAcceleration(geometry::vector newAccel);
-
     void step(double delta);
+
+    static void collide(dynamicObj& o1, dynamicObj& o2);
 };
 };

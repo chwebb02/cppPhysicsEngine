@@ -1,4 +1,4 @@
-#include "../include/physObj.h"
+#include "physObj.h"
 #include <vector>
 
 namespace physics {
@@ -9,5 +9,9 @@ void dynamicObj::step(double delta) {
     velocity += acceleration.scaled(delta);
 
     position += velocity.scaled(delta);
+}
+
+void dynamicObj::collide(dynamicObj& o1, dynamicObj& o2) {
+    using geometry::vector;
 }
 };

@@ -1,4 +1,4 @@
-#include "../include/collider.h"
+#include "collider.h"
 #include <math.h>
 #include <vector>
 
