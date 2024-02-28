@@ -3,7 +3,11 @@
 #include <math.h>
 #include <iostream>
 
+#ifndef main_file
 int main() {
+#else
+int rotationTranslationCollider() {
+#endif
     using geometry::vector;
     using namespace physics;
     using std::cout, std::endl;

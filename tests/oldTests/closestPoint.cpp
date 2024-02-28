@@ -6,7 +6,11 @@
 using namespace geometry;
 using namespace physics;
 
+#ifndef main_file
 int main() {
+#else
+int closestPoint() {
+#endif
     vector t1 = vector(0, -1);
     vector t2 = vector(0, 0);
     vector t3 = vector(0, 1);

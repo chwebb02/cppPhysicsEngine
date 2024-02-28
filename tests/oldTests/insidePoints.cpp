@@ -6,7 +6,11 @@ using namespace geometry;
 using std::cout;
 using std::endl;
 
+#ifndef main_file
 int main() {
+#else 
+int insidePoints() {
+#endif
     vector t1 = vector(3, 1);
     vector t2 = vector(0, 0);
 
