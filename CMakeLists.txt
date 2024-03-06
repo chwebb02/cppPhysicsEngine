@@ -9,7 +9,7 @@ add_executable(PhysicsEngine src/main.cpp)
 include_directories(include/)
 
 # Libraries
-add_library(Geometry src/vector.cpp)
+add_library(Geometry src/vector.cpp src/line.cpp)
 add_library(Physics src/collider.cpp src/physObj.cpp src/vector.cpp)
 
 # Linking
