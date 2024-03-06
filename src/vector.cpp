@@ -1,5 +1,7 @@
-#include "geometry.h"
+#include "vector.h"
 #include <math.h>
+
+const double VECTOR_EQ_TOLERANCE = 1e-15;
 
 namespace geometry {
 vector::vector(double x, double y) {
@@ -53,7 +55,7 @@ vector vector::operator-(vector other) {
 }
 
 bool vector::operator==(vector other) {
-    return x == other.x && y == other.y;
+    return std::abs(x - other.x) <= VECTOR_EQ_TOLERANCE && std::abs(y - other.y) <= VECTOR_EQ_TOLERANCE;
 }
 
 double vector::dotProduct(vector& v1, vector& v2) {
